@@ -1,6 +1,6 @@
 import Foundation
-#if canImport(VLCKit)
-import VLCKit
+#if canImport(VLCKitSPM)
+import VLCKitSPM
 #elseif canImport(MobileVLCKit)
 import MobileVLCKit
 #endif
