@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1131DE352FDEBD4F0098004C /* VLCKitSPM in Frameworks */ = {isa = PBXBuildFile; productRef = 1131DE342FDEBD4F0098004C /* VLCKitSPM */; };
+		1149119B2FDF27F5001B866B /* VLCKitSPM in Frameworks */ = {isa = PBXBuildFile; productRef = 1149119A2FDF27F5001B866B /* VLCKitSPM */; };
 		D100000000000000000000D1 /* LinguaPlayerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C100000000000000000000C1 /* LinguaPlayerApp.swift */; };
 		D200000000000000000000D2 /* MediaTrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = C200000000000000000000C2 /* MediaTrack.swift */; };
 		D300000000000000000000D3 /* VideoPlayerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C300000000000000000000C3 /* VideoPlayerEngine.swift */; };
@@ -44,7 +44,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1131DE352FDEBD4F0098004C /* VLCKitSPM in Frameworks */,
+				1149119B2FDF27F5001B866B /* VLCKitSPM in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -152,7 +152,7 @@
 			);
 			name = LinguaPlayer;
 			packageProductDependencies = (
-				1131DE342FDEBD4F0098004C /* VLCKitSPM */,
+				1149119A2FDF27F5001B866B /* VLCKitSPM */,
 			);
 			productName = LinguaPlayer;
 			productReference = B100000000000000000000B1 /* LinguaPlayer.app */;
@@ -183,7 +183,7 @@
 			);
 			mainGroup = A100000000000000000000A1;
 			packageReferences = (
-				1131DE322FDEB9250098004C /* XCRemoteSwiftPackageReference "vlckit-spm" */,
+				114911992FDF27F5001B866B /* XCRemoteSwiftPackageReference "vlckit-spm" */,
 			);
 			productRefGroup = A800000000000000000000A8 /* Products */;
 			projectDirPath = "";
@@ -411,7 +411,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		1131DE322FDEB9250098004C /* XCRemoteSwiftPackageReference "vlckit-spm" */ = {
+		114911992FDF27F5001B866B /* XCRemoteSwiftPackageReference "vlckit-spm" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/virtualox/vlckit-spm";
 			requirement = {
@@ -422,9 +422,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		1131DE342FDEBD4F0098004C /* VLCKitSPM */ = {
+		1149119A2FDF27F5001B866B /* VLCKitSPM */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 1131DE322FDEB9250098004C /* XCRemoteSwiftPackageReference "vlckit-spm" */;
+			package = 114911992FDF27F5001B866B /* XCRemoteSwiftPackageReference "vlckit-spm" */;
 			productName = VLCKitSPM;
 		};
 /* End XCSwiftPackageProductDependency section */

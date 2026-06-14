@@ -12,6 +12,7 @@ The core idea: subtitles define "phrases". Each subtitle cue (with its start/end
 - **Language:** Swift 5.9+
 - **UI Framework:** SwiftUI (AppKit only where SwiftUI lacks capability)
 - **Video Engine:** VLCKit (via CocoaPods or SPM) — chosen because AVFoundation does not natively support MKV containers, multiple audio track switching, or embedded subtitle extraction reliably
+  - VLCKitSPM 4.x crashes on Intel Macs (OpenGL 2.1). Using VLCKit 3.x via tylerjonesio/vlckit-spm instead.
 - **AI Translation:** Anthropic Claude API (claude-sonnet-4-6) via direct REST calls (URLSession), no SDK dependency
 - **Build System:** Xcode, Swift Package Manager preferred for dependencies
 - **Minimum deployment target:** macOS 13.0
