@@ -45,14 +45,11 @@ xcuserdata/
 Packages/
 Package.pins
 Package.resolved
-*.xcodeproj
 .swiftpm/
 .netrc
 
 # CocoaPods
 Pods/
-*.xcworkspace
-!default.xcworkspace
 
 # Carthage
 Carthage/Build/

@@ -1,0 +1,397 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D100000000000000000000D1 /* LinguaPlayerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C100000000000000000000C1 /* LinguaPlayerApp.swift */; };
+		D200000000000000000000D2 /* MediaTrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = C200000000000000000000C2 /* MediaTrack.swift */; };
+		D300000000000000000000D3 /* VideoPlayerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C300000000000000000000C3 /* VideoPlayerEngine.swift */; };
+		D400000000000000000000D4 /* StreamSetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C400000000000000000000C4 /* StreamSetupViewModel.swift */; };
+		D500000000000000000000D5 /* StreamSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C500000000000000000000C5 /* StreamSetupView.swift */; };
+		D600000000000000000000D6 /* VLCKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5200000000000000000000A2 /* VLCKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		B100000000000000000000B1 /* LinguaPlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LinguaPlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B200000000000000000000B2 /* LinguaPlayer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LinguaPlayer.entitlements; sourceTree = "<group>"; };
+		C100000000000000000000C1 /* LinguaPlayerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinguaPlayerApp.swift; sourceTree = "<group>"; };
+		C200000000000000000000C2 /* MediaTrack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaTrack.swift; sourceTree = "<group>"; };
+		C300000000000000000000C3 /* VideoPlayerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerEngine.swift; sourceTree = "<group>"; };
+		C400000000000000000000C4 /* StreamSetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamSetupViewModel.swift; sourceTree = "<group>"; };
+		C500000000000000000000C5 /* StreamSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamSetupView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E200000000000000000000E2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D600000000000000000000D6 /* VLCKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A100000000000000000000A1 = {
+			isa = PBXGroup;
+			children = (
+				A200000000000000000000A2 /* LinguaPlayer */,
+				A800000000000000000000A8 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A200000000000000000000A2 /* LinguaPlayer */ = {
+			isa = PBXGroup;
+			children = (
+				A300000000000000000000A3 /* App */,
+				A400000000000000000000A4 /* Models */,
+				A500000000000000000000A5 /* Services */,
+				A600000000000000000000A6 /* ViewModels */,
+				A700000000000000000000A7 /* Views */,
+				B200000000000000000000B2 /* LinguaPlayer.entitlements */,
+			);
+			path = LinguaPlayer;
+			sourceTree = "<group>";
+		};
+		A300000000000000000000A3 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				C100000000000000000000C1 /* LinguaPlayerApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A400000000000000000000A4 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				C200000000000000000000C2 /* MediaTrack.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A500000000000000000000A5 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				C300000000000000000000C3 /* VideoPlayerEngine.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A600000000000000000000A6 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				C400000000000000000000C4 /* StreamSetupViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		A700000000000000000000A7 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				C500000000000000000000C5 /* StreamSetupView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		A800000000000000000000A8 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B100000000000000000000B1 /* LinguaPlayer.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B000000000000000000000B0 /* LinguaPlayer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F600000000000000000000F6 /* Build configuration list for PBXNativeTarget "LinguaPlayer" */;
+			buildPhases = (
+				E100000000000000000000E1 /* Sources */,
+				E200000000000000000000E2 /* Frameworks */,
+				E300000000000000000000E3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LinguaPlayer;
+			packageProductDependencies = (
+				5200000000000000000000A2 /* VLCKit */,
+			);
+			productName = LinguaPlayer;
+			productReference = B100000000000000000000B1 /* LinguaPlayer.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A000000000000000000000A0 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					B000000000000000000000B0 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = F500000000000000000000F5 /* Build configuration list for PBXProject "LinguaPlayer" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A100000000000000000000A1;
+			packageReferences = (
+				5100000000000000000000A1 /* XCRemoteSwiftPackageReference "VLCKit" */,
+			);
+			productRefGroup = A800000000000000000000A8 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B000000000000000000000B0 /* LinguaPlayer */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E300000000000000000000E3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E100000000000000000000E1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D100000000000000000000D1 /* LinguaPlayerApp.swift in Sources */,
+				D200000000000000000000D2 /* MediaTrack.swift in Sources */,
+				D300000000000000000000D3 /* VideoPlayerEngine.swift in Sources */,
+				D400000000000000000000D4 /* StreamSetupViewModel.swift in Sources */,
+				D500000000000000000000D5 /* StreamSetupView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		F100000000000000000000F1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		F200000000000000000000F2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		F300000000000000000000F3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = LinguaPlayer/LinguaPlayer.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Lingua Player";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.linguaplayer.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		F400000000000000000000F4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = LinguaPlayer/LinguaPlayer.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Lingua Player";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.linguaplayer.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F500000000000000000000F5 /* Build configuration list for PBXProject "LinguaPlayer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F100000000000000000000F1 /* Debug */,
+				F200000000000000000000F2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F600000000000000000000F6 /* Build configuration list for PBXNativeTarget "LinguaPlayer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F300000000000000000000F3 /* Debug */,
+				F400000000000000000000F4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		5100000000000000000000A1 /* XCRemoteSwiftPackageReference "VLCKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://code.videolan.org/videolan/VLCKit.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5200000000000000000000A2 /* VLCKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5100000000000000000000A1 /* XCRemoteSwiftPackageReference "VLCKit" */;
+			productName = VLCKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = A000000000000000000000A0 /* Project object */;
+}
