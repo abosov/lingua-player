@@ -5,7 +5,7 @@ struct SubtitleOverlayView: View {
 
     var body: some View {
         Text(text.isEmpty ? " " : text)
-            .font(.title3.weight(.semibold))
+            .font(.system(size: 26, weight: .semibold))
             .foregroundStyle(.white)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 24)

@@ -89,7 +89,7 @@ final class PlayerViewModel: NSObject, ObservableObject {
         guard target >= 0, target < tracks.count else { return }
         // Exclusive selection: setting this to true unselects every other audio
         // track automatically — flipping per-track isSelected is unreliable.
-        tracks[target].selectedExclusively = true
+        tracks[target].isSelectedExclusively = true
     }
 
     private func disableVLCSubtitleOverlay() {
@@ -177,7 +177,7 @@ extension PlayerViewModel: VLCMediaPlayerDelegate {
 
     // Audio tracks aren't enumerated by libvlc until shortly after playback
     // starts. This callback is the reliable signal that they're now selectable.
-    nonisolated func mediaPlayerTrackAdded(_ trackId: String, withType trackType: VLCMedia.TrackType) {
+    nonisolated func mediaPlayerTrackAdded(_ trackId: String, with trackType: VLCMedia.TrackType) {
         guard trackType == .audio else { return }
         Task { @MainActor in
             self.applyAudioSelection()

@@ -70,7 +70,7 @@ struct MainPlayerView: View {
             Button("") { viewModel.nextPhrase() }
                 .keyboardShortcut(.rightArrow, modifiers: [])
             Button("") { viewModel.toggleChannel() }
-                .keyboardShortcut(.tab, modifiers: [])
+                .keyboardShortcut("a", modifiers: [])
         }
         .opacity(0)
         .frame(width: 0, height: 0)
