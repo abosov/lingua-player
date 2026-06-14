@@ -185,10 +185,18 @@ private struct TrackRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            Text("#\(track.id)")
-                .monospaced()
-                .frame(width: 48, alignment: .leading)
-                .foregroundStyle(.secondary)
+            Group {
+                if track.isExternal {
+                    Text("EXT")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.purple)
+                } else {
+                    Text("#\(track.id)")
+                        .monospaced()
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(width: 48, alignment: .leading)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(track.language ?? "Unknown language")

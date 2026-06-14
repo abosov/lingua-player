@@ -64,6 +64,7 @@ final class VideoPlayerEngine: NSObject {
             return MediaTrack(
                 id: index,
                 kind: kind,
+                source: .embedded,
                 language: Self.nonEmptyString(obj, "language"),
                 codec: Self.nonEmptyString(obj, "codecName"),
                 description: Self.nonEmptyString(obj, "trackDescription")

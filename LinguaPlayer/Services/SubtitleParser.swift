@@ -40,6 +40,20 @@ enum SubtitleParser {
         return parseSRT(srt)
     }
 
+    /// Reads an external .srt file from disk and parses it. SRTs in the wild
+    /// come in mixed encodings — UTF-8 first, then CP1251 (common for Russian
+    /// fansubs), then Latin-1 as a last resort.
+    static func parseFile(at url: URL) async throws -> [SubtitleCue] {
+        let data = try Data(contentsOf: url)
+        let candidates: [String.Encoding] = [.utf8, .windowsCP1251, .isoLatin1]
+        for encoding in candidates {
+            if let text = String(data: data, encoding: encoding) {
+                return parseSRT(text)
+            }
+        }
+        throw SubtitleParseError.decodingFailed
+    }
+
     private static func locateFFmpeg() throws -> String {
         for path in ffmpegCandidates where FileManager.default.isExecutableFile(atPath: path) {
             return path
