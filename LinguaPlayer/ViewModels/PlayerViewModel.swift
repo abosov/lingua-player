@@ -35,7 +35,6 @@ final class PlayerViewModel: NSObject, ObservableObject {
 
         super.init()
 
-        player.drawable = view
         player.delegate = self
         if let media = VLCMedia(url: setup.fileURL) {
             player.media = media
