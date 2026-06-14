@@ -158,8 +158,8 @@ final class PlayerViewModel: NSObject, ObservableObject {
     }
 
     private func tick() {
-        currentTime = TimeInterval(player.time?.intValue ?? 0) / 1000.0
-        if duration == 0, let length = player.media?.length?.intValue, length > 0 {
+        currentTime = TimeInterval(player.time.intValue) / 1000.0
+        if duration == 0, let length = player.media?.length.intValue, length > 0 {
             duration = TimeInterval(length) / 1000.0
         }
         isPlaying = player.isPlaying
@@ -179,7 +179,7 @@ extension PlayerViewModel: VLCMediaPlayerDelegate {
             didApplyInitialSelection = true
             applyAudioSelection()
             disableVLCSubtitleOverlay()
-            if let length = player.media?.length?.intValue, length > 0 {
+            if let length = player.media?.length.intValue, length > 0 {
                 duration = TimeInterval(length) / 1000.0
             }
         }
