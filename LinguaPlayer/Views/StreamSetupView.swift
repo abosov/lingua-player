@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct StreamSetupView: View {
-    @StateObject private var viewModel = StreamSetupViewModel()
+    @ObservedObject var viewModel: StreamSetupViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -38,6 +38,7 @@ struct StreamSetupView: View {
 
             if !viewModel.audioTracks.isEmpty || !viewModel.subtitleTracks.isEmpty {
                 tracksList
+                continueBar
             } else {
                 Spacer()
                 placeholder
@@ -52,7 +53,7 @@ struct StreamSetupView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Lingua Player")
                 .font(.largeTitle.bold())
-            Text("Open a video file to inspect its audio and subtitle tracks.")
+            Text("Click an audio track to assign it to Channel A or Channel B.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -80,7 +81,11 @@ struct StreamSetupView: View {
                     Text("None").foregroundStyle(.secondary)
                 } else {
                     ForEach(viewModel.audioTracks) { track in
-                        TrackRow(track: track)
+                        AudioTrackRow(
+                            track: track,
+                            channel: viewModel.channel(for: track.id),
+                            onTap: { viewModel.toggleAssignment(for: track.id) }
+                        )
                     }
                 }
             }
@@ -90,17 +95,55 @@ struct StreamSetupView: View {
                     Text("None").foregroundStyle(.secondary)
                 } else {
                     ForEach(viewModel.subtitleTracks) { track in
-                        TrackRow(track: track)
+                        TrackRow(track: track, badge: nil)
                     }
                 }
             }
         }
         .listStyle(.inset)
     }
+
+    private var continueBar: some View {
+        HStack {
+            Text(continueHint)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Button("Continue") {
+                viewModel.continueToPlayer()
+            }
+            .controlSize(.large)
+            .keyboardShortcut(.return, modifiers: .command)
+            .disabled(!viewModel.bothChannelsAssigned)
+        }
+    }
+
+    private var continueHint: String {
+        switch (viewModel.channelA, viewModel.channelB) {
+        case (nil, _): return "Pick Channel A (primary audio)."
+        case (_, nil): return "Pick Channel B (secondary audio)."
+        default:       return "Both channels assigned."
+        }
+    }
+}
+
+private struct AudioTrackRow: View {
+    let track: MediaTrack
+    let channel: Channel?
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            TrackRow(track: track, badge: channel)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
 }
 
 private struct TrackRow: View {
     let track: MediaTrack
+    let badge: Channel?
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -129,11 +172,30 @@ private struct TrackRow: View {
             }
 
             Spacer()
+
+            if let badge {
+                ChannelBadge(channel: badge)
+            }
         }
         .padding(.vertical, 2)
     }
 }
 
-#Preview {
-    StreamSetupView()
+private struct ChannelBadge: View {
+    let channel: Channel
+
+    var body: some View {
+        Text(channel.label)
+            .font(.caption.bold())
+            .foregroundStyle(.white)
+            .frame(width: 22, height: 22)
+            .background(color, in: Circle())
+    }
+
+    private var color: Color {
+        switch channel {
+        case .a: return .blue
+        case .b: return .orange
+        }
+    }
 }

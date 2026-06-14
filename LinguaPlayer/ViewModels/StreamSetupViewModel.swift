@@ -10,10 +10,42 @@ final class StreamSetupViewModel: ObservableObject {
     @Published private(set) var isLoading: Bool = false
     @Published var errorMessage: String?
 
+    @Published private(set) var channelA: Int?
+    @Published private(set) var channelB: Int?
+    @Published private(set) var hasContinuedToPlayer: Bool = false
+
     private let engine: VideoPlayerEngine
 
     init(engine: VideoPlayerEngine = VideoPlayerEngine()) {
         self.engine = engine
+    }
+
+    var bothChannelsAssigned: Bool {
+        channelA != nil && channelB != nil
+    }
+
+    func channel(for trackId: Int) -> Channel? {
+        if channelA == trackId { return .a }
+        if channelB == trackId { return .b }
+        return nil
+    }
+
+    func toggleAssignment(for trackId: Int) {
+        if channelA == trackId {
+            channelA = nil
+        } else if channelB == trackId {
+            channelB = nil
+        } else if channelA == nil {
+            channelA = trackId
+        } else if channelB == nil {
+            channelB = trackId
+        }
+    }
+
+    func continueToPlayer() {
+        guard let a = channelA, let b = channelB else { return }
+        print("[StreamSetupViewModel] continue — channelA: \(a), channelB: \(b)")
+        hasContinuedToPlayer = true
     }
 
     func openFile() {
@@ -42,6 +74,9 @@ final class StreamSetupViewModel: ObservableObject {
         fileURL = url
         audioTracks = []
         subtitleTracks = []
+        channelA = nil
+        channelB = nil
+        hasContinuedToPlayer = false
         errorMessage = nil
         isLoading = true
         defer { isLoading = false }

@@ -13,6 +13,8 @@
 		D300000000000000000000D3 /* VideoPlayerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C300000000000000000000C3 /* VideoPlayerEngine.swift */; };
 		D400000000000000000000D4 /* StreamSetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C400000000000000000000C4 /* StreamSetupViewModel.swift */; };
 		D500000000000000000000D5 /* StreamSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C500000000000000000000C5 /* StreamSetupView.swift */; };
+		D700000000000000000000D7 /* StreamMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = C600000000000000000000C6 /* StreamMapping.swift */; };
+		D800000000000000000000D8 /* MainPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C700000000000000000000C7 /* MainPlayerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,6 +25,8 @@
 		C300000000000000000000C3 /* VideoPlayerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerEngine.swift; sourceTree = "<group>"; };
 		C400000000000000000000C4 /* StreamSetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamSetupViewModel.swift; sourceTree = "<group>"; };
 		C500000000000000000000C5 /* StreamSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamSetupView.swift; sourceTree = "<group>"; };
+		C600000000000000000000C6 /* StreamMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamMapping.swift; sourceTree = "<group>"; };
+		C700000000000000000000C7 /* MainPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainPlayerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,6 +82,7 @@
 			isa = PBXGroup;
 			children = (
 				C200000000000000000000C2 /* MediaTrack.swift */,
+				C600000000000000000000C6 /* StreamMapping.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -102,6 +107,7 @@
 			isa = PBXGroup;
 			children = (
 				C500000000000000000000C5 /* StreamSetupView.swift */,
+				C700000000000000000000C7 /* MainPlayerView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -193,6 +199,8 @@
 				D300000000000000000000D3 /* VideoPlayerEngine.swift in Sources */,
 				D400000000000000000000D4 /* StreamSetupViewModel.swift in Sources */,
 				D500000000000000000000D5 /* StreamSetupView.swift in Sources */,
+				D700000000000000000000D7 /* StreamMapping.swift in Sources */,
+				D800000000000000000000D8 /* MainPlayerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
