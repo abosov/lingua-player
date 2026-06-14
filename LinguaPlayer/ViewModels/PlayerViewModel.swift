@@ -82,16 +82,18 @@ final class PlayerViewModel: NSObject, ObservableObject {
     private func applyAudioSelection() {
         let target = (activeChannel == .a) ? setup.audioTrackAIndex : setup.audioTrackBIndex
         let tracks = player.audioTracks
-        guard target >= 0, target < tracks.count else { return }
+        print("[PlayerViewModel] applyAudioSelection channel=\(activeChannel.label) target=\(target) tracks=\(tracks.count)")
         for (i, track) in tracks.enumerated() {
-            track.isSelected = (i == target)
+            print("  [\(i)] id=\(track.trackId) name=\(track.trackName) lang=\(track.language ?? "?") selected=\(track.isSelected)")
         }
+        guard target >= 0, target < tracks.count else { return }
+        // Exclusive selection: setting this to true unselects every other audio
+        // track automatically — flipping per-track isSelected is unreliable.
+        tracks[target].selectedExclusively = true
     }
 
     private func disableVLCSubtitleOverlay() {
-        for track in player.textTracks {
-            track.isSelected = false
-        }
+        player.deselectAllTextTracks()
     }
 
     // MARK: Phrase navigation
@@ -167,9 +169,18 @@ final class PlayerViewModel: NSObject, ObservableObject {
 }
 
 extension PlayerViewModel: VLCMediaPlayerDelegate {
-    nonisolated func mediaPlayerStateChanged(_ aNotification: Notification) {
+    nonisolated func mediaPlayerStateChanged(_ newState: VLCMediaPlayerState) {
         Task { @MainActor in
             self.handleStateChange()
+        }
+    }
+
+    // Audio tracks aren't enumerated by libvlc until shortly after playback
+    // starts. This callback is the reliable signal that they're now selectable.
+    nonisolated func mediaPlayerTrackAdded(_ trackId: String, withType trackType: VLCMedia.TrackType) {
+        guard trackType == .audio else { return }
+        Task { @MainActor in
+            self.applyAudioSelection()
         }
     }
 
