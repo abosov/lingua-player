@@ -13,7 +13,7 @@ final class StreamSetupViewModel: ObservableObject {
     @Published private(set) var channelA: Int?
     @Published private(set) var channelB: Int?
     @Published private(set) var activeSubtitle: Int?
-    @Published private(set) var hasContinuedToPlayer: Bool = false
+    @Published private(set) var playbackSetup: PlaybackSetup?
 
     private let engine: VideoPlayerEngine
 
@@ -56,9 +56,19 @@ final class StreamSetupViewModel: ObservableObject {
     }
 
     func continueToPlayer() {
-        guard let a = channelA, let b = channelB, let s = activeSubtitle else { return }
-        print("[StreamSetupViewModel] continue — channelA: \(a), channelB: \(b), subtitle: \(s)")
-        hasContinuedToPlayer = true
+        guard let url = fileURL,
+              let a = channelA, let b = channelB, let s = activeSubtitle,
+              let aIndex = audioTracks.firstIndex(where: { $0.id == a }),
+              let bIndex = audioTracks.firstIndex(where: { $0.id == b }),
+              let sIndex = subtitleTracks.firstIndex(where: { $0.id == s })
+        else { return }
+        print("[StreamSetupViewModel] continue — audio A:#\(aIndex), audio B:#\(bIndex), subtitle:#\(sIndex)")
+        playbackSetup = PlaybackSetup(
+            fileURL: url,
+            audioTrackAIndex: aIndex,
+            audioTrackBIndex: bIndex,
+            subtitleTrackIndex: sIndex
+        )
     }
 
     func openFile() {
@@ -90,7 +100,7 @@ final class StreamSetupViewModel: ObservableObject {
         channelA = nil
         channelB = nil
         activeSubtitle = nil
-        hasContinuedToPlayer = false
+        playbackSetup = nil
         errorMessage = nil
         isLoading = true
         defer { isLoading = false }

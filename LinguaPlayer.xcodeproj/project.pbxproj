@@ -15,6 +15,11 @@
 		D500000000000000000000D5 /* StreamSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C500000000000000000000C5 /* StreamSetupView.swift */; };
 		D700000000000000000000D7 /* StreamMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = C600000000000000000000C6 /* StreamMapping.swift */; };
 		D800000000000000000000D8 /* MainPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C700000000000000000000C7 /* MainPlayerView.swift */; };
+		D900000000000000000000D9 /* SubtitleCue.swift in Sources */ = {isa = PBXBuildFile; fileRef = C800000000000000000000C8 /* SubtitleCue.swift */; };
+		DA00000000000000000000DA /* SubtitleParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C900000000000000000000C9 /* SubtitleParser.swift */; };
+		DB00000000000000000000DB /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00000000000000000000CA /* PlayerViewModel.swift */; };
+		DC00000000000000000000DC /* SubtitleOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB00000000000000000000CB /* SubtitleOverlayView.swift */; };
+		DD00000000000000000000DD /* ControlBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC00000000000000000000CC /* ControlBarView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +32,11 @@
 		C500000000000000000000C5 /* StreamSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamSetupView.swift; sourceTree = "<group>"; };
 		C600000000000000000000C6 /* StreamMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamMapping.swift; sourceTree = "<group>"; };
 		C700000000000000000000C7 /* MainPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainPlayerView.swift; sourceTree = "<group>"; };
+		C800000000000000000000C8 /* SubtitleCue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleCue.swift; sourceTree = "<group>"; };
+		C900000000000000000000C9 /* SubtitleParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleParser.swift; sourceTree = "<group>"; };
+		CA00000000000000000000CA /* PlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerViewModel.swift; sourceTree = "<group>"; };
+		CB00000000000000000000CB /* SubtitleOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleOverlayView.swift; sourceTree = "<group>"; };
+		CC00000000000000000000CC /* ControlBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlBarView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -83,6 +93,7 @@
 			children = (
 				C200000000000000000000C2 /* MediaTrack.swift */,
 				C600000000000000000000C6 /* StreamMapping.swift */,
+				C800000000000000000000C8 /* SubtitleCue.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -91,6 +102,7 @@
 			isa = PBXGroup;
 			children = (
 				C300000000000000000000C3 /* VideoPlayerEngine.swift */,
+				C900000000000000000000C9 /* SubtitleParser.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -99,6 +111,7 @@
 			isa = PBXGroup;
 			children = (
 				C400000000000000000000C4 /* StreamSetupViewModel.swift */,
+				CA00000000000000000000CA /* PlayerViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -108,6 +121,8 @@
 			children = (
 				C500000000000000000000C5 /* StreamSetupView.swift */,
 				C700000000000000000000C7 /* MainPlayerView.swift */,
+				CB00000000000000000000CB /* SubtitleOverlayView.swift */,
+				CC00000000000000000000CC /* ControlBarView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -201,6 +216,11 @@
 				D500000000000000000000D5 /* StreamSetupView.swift in Sources */,
 				D700000000000000000000D7 /* StreamMapping.swift in Sources */,
 				D800000000000000000000D8 /* MainPlayerView.swift in Sources */,
+				D900000000000000000000D9 /* SubtitleCue.swift in Sources */,
+				DA00000000000000000000DA /* SubtitleParser.swift in Sources */,
+				DB00000000000000000000DB /* PlayerViewModel.swift in Sources */,
+				DC00000000000000000000DC /* SubtitleOverlayView.swift in Sources */,
+				DD00000000000000000000DD /* ControlBarView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
