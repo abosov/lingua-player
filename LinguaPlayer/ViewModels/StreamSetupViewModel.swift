@@ -12,6 +12,7 @@ final class StreamSetupViewModel: ObservableObject {
 
     @Published private(set) var channelA: Int?
     @Published private(set) var channelB: Int?
+    @Published private(set) var activeSubtitle: Int?
     @Published private(set) var hasContinuedToPlayer: Bool = false
 
     private let engine: VideoPlayerEngine
@@ -20,14 +21,18 @@ final class StreamSetupViewModel: ObservableObject {
         self.engine = engine
     }
 
-    var bothChannelsAssigned: Bool {
-        channelA != nil && channelB != nil
+    var canContinue: Bool {
+        channelA != nil && channelB != nil && activeSubtitle != nil
     }
 
     func channel(for trackId: Int) -> Channel? {
         if channelA == trackId { return .a }
         if channelB == trackId { return .b }
         return nil
+    }
+
+    func isActiveSubtitle(_ trackId: Int) -> Bool {
+        activeSubtitle == trackId
     }
 
     func toggleAssignment(for trackId: Int) {
@@ -42,9 +47,17 @@ final class StreamSetupViewModel: ObservableObject {
         }
     }
 
+    func toggleSubtitle(for trackId: Int) {
+        if activeSubtitle == trackId {
+            activeSubtitle = nil
+        } else {
+            activeSubtitle = trackId
+        }
+    }
+
     func continueToPlayer() {
-        guard let a = channelA, let b = channelB else { return }
-        print("[StreamSetupViewModel] continue — channelA: \(a), channelB: \(b)")
+        guard let a = channelA, let b = channelB, let s = activeSubtitle else { return }
+        print("[StreamSetupViewModel] continue — channelA: \(a), channelB: \(b), subtitle: \(s)")
         hasContinuedToPlayer = true
     }
 
@@ -76,6 +89,7 @@ final class StreamSetupViewModel: ObservableObject {
         subtitleTracks = []
         channelA = nil
         channelB = nil
+        activeSubtitle = nil
         hasContinuedToPlayer = false
         errorMessage = nil
         isLoading = true

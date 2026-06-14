@@ -3,6 +3,7 @@ import SwiftUI
 struct MainPlayerView: View {
     let channelA: Int
     let channelB: Int
+    let subtitle: Int
 
     var body: some View {
         VStack(spacing: 16) {
@@ -11,7 +12,7 @@ struct MainPlayerView: View {
                 .foregroundStyle(.tertiary)
             Text("Player coming soon")
                 .font(.title.bold())
-            Text("Channel A: track #\(channelA)   ·   Channel B: track #\(channelB)")
+            Text("Channel A: track #\(channelA)   ·   Channel B: track #\(channelB)   ·   Subtitle: track #\(subtitle)")
                 .foregroundStyle(.secondary)
         }
         .padding(40)

@@ -16,8 +16,9 @@ private struct RootView: View {
     var body: some View {
         if setupViewModel.hasContinuedToPlayer,
            let a = setupViewModel.channelA,
-           let b = setupViewModel.channelB {
-            MainPlayerView(channelA: a, channelB: b)
+           let b = setupViewModel.channelB,
+           let s = setupViewModel.activeSubtitle {
+            MainPlayerView(channelA: a, channelB: b, subtitle: s)
         } else {
             StreamSetupView(viewModel: setupViewModel)
         }

@@ -53,7 +53,7 @@ struct StreamSetupView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Lingua Player")
                 .font(.largeTitle.bold())
-            Text("Click an audio track to assign it to Channel A or Channel B.")
+            Text("Click an audio track to assign A/B, and a subtitle track for phrases.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -95,7 +95,11 @@ struct StreamSetupView: View {
                     Text("None").foregroundStyle(.secondary)
                 } else {
                     ForEach(viewModel.subtitleTracks) { track in
-                        TrackRow(track: track, badge: nil)
+                        SubtitleTrackRow(
+                            track: track,
+                            isActive: viewModel.isActiveSubtitle(track.id),
+                            onTap: { viewModel.toggleSubtitle(for: track.id) }
+                        )
                     }
                 }
             }
@@ -114,16 +118,15 @@ struct StreamSetupView: View {
             }
             .controlSize(.large)
             .keyboardShortcut(.return, modifiers: .command)
-            .disabled(!viewModel.bothChannelsAssigned)
+            .disabled(!viewModel.canContinue)
         }
     }
 
     private var continueHint: String {
-        switch (viewModel.channelA, viewModel.channelB) {
-        case (nil, _): return "Pick Channel A (primary audio)."
-        case (_, nil): return "Pick Channel B (secondary audio)."
-        default:       return "Both channels assigned."
-        }
+        if viewModel.channelA == nil      { return "Pick Channel A (primary audio)." }
+        if viewModel.channelB == nil      { return "Pick Channel B (secondary audio)." }
+        if viewModel.activeSubtitle == nil { return "Pick the subtitle track." }
+        return "All assignments set."
     }
 }
 
@@ -134,7 +137,21 @@ private struct AudioTrackRow: View {
 
     var body: some View {
         Button(action: onTap) {
-            TrackRow(track: track, badge: channel)
+            TrackRow(track: track, badge: channel.map { Badge(for: $0) })
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct SubtitleTrackRow: View {
+    let track: MediaTrack
+    let isActive: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            TrackRow(track: track, badge: isActive ? Badge.subtitle : nil)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -143,7 +160,7 @@ private struct AudioTrackRow: View {
 
 private struct TrackRow: View {
     let track: MediaTrack
-    let badge: Channel?
+    let badge: Badge?
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -174,28 +191,41 @@ private struct TrackRow: View {
             Spacer()
 
             if let badge {
-                ChannelBadge(channel: badge)
+                BadgeView(badge: badge)
             }
         }
         .padding(.vertical, 2)
     }
 }
 
-private struct ChannelBadge: View {
-    let channel: Channel
+private struct Badge {
+    let label: String
+    let color: Color
+
+    static let subtitle = Badge(label: "S", color: .green)
+
+    init(label: String, color: Color) {
+        self.label = label
+        self.color = color
+    }
+
+    init(for channel: Channel) {
+        self.label = channel.label
+        switch channel {
+        case .a: self.color = .blue
+        case .b: self.color = .orange
+        }
+    }
+}
+
+private struct BadgeView: View {
+    let badge: Badge
 
     var body: some View {
-        Text(channel.label)
+        Text(badge.label)
             .font(.caption.bold())
             .foregroundStyle(.white)
             .frame(width: 22, height: 22)
-            .background(color, in: Circle())
-    }
-
-    private var color: Color {
-        switch channel {
-        case .a: return .blue
-        case .b: return .orange
-        }
+            .background(badge.color, in: Circle())
     }
 }
