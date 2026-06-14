@@ -7,13 +7,11 @@ import MobileVLCKit
 
 enum VideoProbeError: LocalizedError {
     case mediaCreationFailed
-    case probeFailed
     case noTracksFound
 
     var errorDescription: String? {
         switch self {
         case .mediaCreationFailed: return "Could not open the file with VLCKit."
-        case .probeFailed: return "VLCKit failed to read tracks from the file."
         case .noTracksFound: return "No audio or subtitle tracks were found."
         }
     }
@@ -21,13 +19,13 @@ enum VideoProbeError: LocalizedError {
 
 /// Wraps VLCKit. For Step 1 only exposes track probing; playback comes later.
 ///
-/// VLCKit 4.x dropped the `tracksInformation` dictionary API. Tracks are now
-/// exposed on `VLCMediaPlayer` once playback opens, so we briefly play the
-/// file (muted, no drawable) and read `audioTracks` + `textTracks`.
+/// Uses VLCMedia.parse(options: [.parseLocal]) so no decoding happens — the
+/// file is inspected purely for stream metadata. Result arrives via the
+/// VLCMediaDelegate.mediaDidFinishParsing callback.
 final class VideoPlayerEngine: NSObject {
     private let lock = NSLock()
     private var pending: CheckedContinuation<[MediaTrack], Error>?
-    private var probePlayer: VLCMediaPlayer?
+    private var currentMedia: VLCMedia?
 
     func probeTracks(at url: URL) async throws -> [MediaTrack] {
         try await withCheckedThrowingContinuation { continuation in
@@ -35,78 +33,61 @@ final class VideoPlayerEngine: NSObject {
                 continuation.resume(throwing: VideoProbeError.mediaCreationFailed)
                 return
             }
-            let player = VLCMediaPlayer()
-            player.media = media
-            player.delegate = self
-            player.audio?.volume = 0
+            media.delegate = self
 
             lock.lock()
             self.pending = continuation
-            self.probePlayer = player
+            self.currentMedia = media
             lock.unlock()
 
-            player.play()
+            media.parse(options: [.parseLocal])
         }
     }
 
-    private func collectTracks(from player: VLCMediaPlayer) -> [MediaTrack] {
-        var result: [MediaTrack] = []
-        for (offset, track) in player.audioTracks.enumerated() {
-            result.append(MediaTrack(
-                id: offset,
-                kind: .audio,
-                language: nil,
-                codec: nil,
-                description: track.trackName
-            ))
+    // VLCKitSPM 4.x: VLCMediaTrack is an NSObject; its Obj-C properties are
+    // not bridged into Swift directly, so we read them via KVC.
+    //   type: NSNumber  — 0 audio, 1 video, 2 text
+    //   language, trackDescription, codecName: NSString?
+    private func extractTracks(from media: VLCMedia) -> [MediaTrack] {
+        media.tracksInformation.enumerated().compactMap { index, track in
+            guard let obj = track as? NSObject,
+                  let type = obj.value(forKey: "type") as? Int
+            else { return nil }
+
+            let kind: MediaTrack.Kind
+            switch type {
+            case 0: kind = .audio
+            case 2: kind = .subtitle
+            default: return nil
+            }
+
+            return MediaTrack(
+                id: index,
+                kind: kind,
+                language: Self.nonEmptyString(obj, "language"),
+                codec: Self.nonEmptyString(obj, "codecName"),
+                description: Self.nonEmptyString(obj, "trackDescription")
+            )
         }
-        for (offset, track) in player.textTracks.enumerated() {
-            result.append(MediaTrack(
-                id: offset,
-                kind: .subtitle,
-                language: nil,
-                codec: nil,
-                description: track.trackName
-            ))
-        }
-        return result
     }
 
-    private func finish(tracks: [MediaTrack]) {
-        lock.lock()
-        let continuation = pending
-        let player = probePlayer
-        pending = nil
-        probePlayer = nil
-        lock.unlock()
-
-        player?.stop()
-        continuation?.resume(returning: tracks)
-    }
-
-    private func fail(_ error: Error) {
-        lock.lock()
-        let continuation = pending
-        let player = probePlayer
-        pending = nil
-        probePlayer = nil
-        lock.unlock()
-
-        player?.stop()
-        continuation?.resume(throwing: error)
+    private static func nonEmptyString(_ obj: NSObject, _ key: String) -> String? {
+        guard let value = obj.value(forKey: key) as? String, !value.isEmpty else {
+            return nil
+        }
+        return value
     }
 }
 
-extension VideoPlayerEngine: VLCMediaPlayerDelegate {
-    func mediaPlayerStateChanged(_ aNotification: Notification) {
-        guard let player = aNotification.object as? VLCMediaPlayer else { return }
-        switch player.state {
-        case .playing:
-            finish(tracks: collectTracks(from: player))
-        case .error:
-            fail(VideoProbeError.probeFailed)
-        default:
-            break
-        }
+extension VideoPlayerEngine: VLCMediaDelegate {
+    func mediaDidFinishParsing(_ aMedia: VLCMedia) {
+        lock.lock()
+        let continuation = pending
+        pending = nil
+        currentMedia = nil
+        lock.unlock()
+
+        guard let continuation else { return }
+        continuation.resume(returning: extractTracks(from: aMedia))
     }
 }
