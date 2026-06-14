@@ -105,9 +105,9 @@ final class PlayerViewModel: NSObject, ObservableObject {
     // MARK: Phrase navigation
 
     func previousPhrase() {
-        // First press inside a cue (>1s in) replays the current cue; a second
-        // press within the first second walks back to the previous cue.
-        let rewindThreshold: TimeInterval = 1.0
+        // First press inside a cue (>2s in) replays the current cue; a second
+        // press within the first two seconds walks back to the previous cue.
+        let rewindThreshold: TimeInterval = 2.0
         if let current = currentCue(at: currentTime) {
             if currentTime - current.startTime < rewindThreshold {
                 if let idx = cues.firstIndex(of: current), idx > 0 {
