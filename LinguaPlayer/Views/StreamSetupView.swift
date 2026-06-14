@@ -47,6 +47,27 @@ struct StreamSetupView: View {
         }
         .padding(24)
         .frame(minWidth: 640, minHeight: 480)
+        .overlay { preparingOverlay }
+    }
+
+    @ViewBuilder
+    private var preparingOverlay: some View {
+        if viewModel.isPreparing {
+            ZStack {
+                Color.black.opacity(0.55)
+                VStack(spacing: 14) {
+                    ProgressView()
+                        .controlSize(.large)
+                    Text(viewModel.preparingStatus ?? "Preparing…")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                }
+                .padding(28)
+                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            }
+            .ignoresSafeArea()
+            .transition(.opacity)
+        }
     }
 
     private var header: some View {
@@ -118,7 +139,7 @@ struct StreamSetupView: View {
             }
             .controlSize(.large)
             .keyboardShortcut(.return, modifiers: .command)
-            .disabled(!viewModel.canContinue)
+            .disabled(!viewModel.canContinue || viewModel.isPreparing)
         }
     }
 

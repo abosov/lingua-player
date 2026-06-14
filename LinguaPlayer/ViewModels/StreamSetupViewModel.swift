@@ -15,6 +15,9 @@ final class StreamSetupViewModel: ObservableObject {
     @Published private(set) var activeSubtitle: Int?
     @Published private(set) var playbackSetup: PlaybackSetup?
 
+    @Published private(set) var isPreparing: Bool = false
+    @Published private(set) var preparingStatus: String?
+
     private let engine: VideoPlayerEngine
 
     init(engine: VideoPlayerEngine = VideoPlayerEngine()) {
@@ -56,19 +59,41 @@ final class StreamSetupViewModel: ObservableObject {
     }
 
     func continueToPlayer() {
-        guard let url = fileURL,
+        guard !isPreparing,
+              let url = fileURL,
               let a = channelA, let b = channelB, let s = activeSubtitle,
               let aIndex = audioTracks.firstIndex(where: { $0.id == a }),
               let bIndex = audioTracks.firstIndex(where: { $0.id == b }),
               let sIndex = subtitleTracks.firstIndex(where: { $0.id == s })
         else { return }
         print("[StreamSetupViewModel] continue — audio A:#\(aIndex), audio B:#\(bIndex), subtitle:#\(sIndex)")
-        playbackSetup = PlaybackSetup(
-            fileURL: url,
-            audioTrackAIndex: aIndex,
-            audioTrackBIndex: bIndex,
-            subtitleTrackIndex: sIndex
-        )
+        Task { await prepare(source: url, audioA: aIndex, audioB: bIndex, subtitle: sIndex) }
+    }
+
+    private func prepare(source: URL, audioA: Int, audioB: Int, subtitle: Int) async {
+        isPreparing = true
+        preparingStatus = "Preparing video…"
+        errorMessage = nil
+        defer {
+            isPreparing = false
+            preparingStatus = nil
+        }
+
+        do {
+            async let remuxedTask = MediaPreparer.remux(
+                source: source,
+                audioTrackAIndex: audioA,
+                audioTrackBIndex: audioB
+            )
+            async let cuesTask = SubtitleParser.extractCues(
+                fileURL: source,
+                subtitleStreamIndex: subtitle
+            )
+            let (remuxedURL, cues) = try await (remuxedTask, cuesTask)
+            playbackSetup = PlaybackSetup(remuxedURL: remuxedURL, cues: cues)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     func openFile() {

@@ -1,10 +1,5 @@
 import Foundation
-import AppKit
-#if canImport(VLCKitSPM)
-import VLCKitSPM
-#elseif canImport(MobileVLCKit)
-import MobileVLCKit
-#endif
+import AVFoundation
 
 @MainActor
 final class PlayerViewModel: NSObject, ObservableObject {
@@ -14,50 +9,45 @@ final class PlayerViewModel: NSObject, ObservableObject {
     @Published private(set) var activeChannel: Channel = .a
     @Published private(set) var cues: [SubtitleCue] = []
     @Published private(set) var currentCueIndex: Int? = nil
-    @Published private(set) var subtitleStatus: String? = nil
 
-    let drawableView: NSView
-    private let setup: PlaybackSetup
-    private let player: VLCMediaPlayer
-    private var timer: Timer?
-    private var didApplyInitialSelection = false
+    let player: AVPlayer
+    private let remuxedURL: URL
+    private var timeObserver: Any?
+    private var rateObservation: NSKeyValueObservation?
+    private var audioSelectionGroup: AVMediaSelectionGroup?
+    private var audioOptions: [AVMediaSelectionOption] = []
 
     init(setup: PlaybackSetup) {
-        self.setup = setup
-
-        let view = NSView()
-        view.wantsLayer = true
-        view.layer?.backgroundColor = NSColor.black.cgColor
-        self.drawableView = view
-
-        let player = VLCMediaPlayer()
-        self.player = player
-
+        self.remuxedURL = setup.remuxedURL
+        self.cues = setup.cues
+        let item = AVPlayerItem(url: setup.remuxedURL)
+        self.player = AVPlayer(playerItem: item)
         super.init()
+        startTimeObserver()
+        observeRate()
+        Task { await loadAudioOptions(for: item) }
+    }
 
-        player.delegate = self
-        if let media = VLCMedia(url: setup.fileURL) {
-            player.media = media
+    deinit {
+        if let timeObserver {
+            player.removeTimeObserver(timeObserver)
         }
+        // Clean up the temp remuxed MP4 so we don't leak it between sessions.
+        try? FileManager.default.removeItem(at: remuxedURL)
     }
 
     func start() {
-        guard timer == nil else { return }
         player.play()
-        startTimer()
-        Task { await loadSubtitles() }
     }
 
     func stop() {
-        timer?.invalidate()
-        timer = nil
-        player.stop()
+        player.pause()
     }
 
     // MARK: Playback
 
     func togglePlayback() {
-        if player.isPlaying {
+        if player.rate > 0 {
             player.pause()
         } else {
             player.play()
@@ -66,9 +56,11 @@ final class PlayerViewModel: NSObject, ObservableObject {
 
     func seek(to seconds: TimeInterval) {
         let clamped = max(0, seconds)
-        player.time = VLCTime(int: Int32(clamped * 1000))
-        if !player.isPlaying {
-            player.play()
+        let target = CMTime(seconds: clamped, preferredTimescale: 600)
+        // Phrase boundaries are exact — disallow seek tolerance so we never
+        // land mid-cue. Resume playback after the seek completes.
+        player.seek(to: target, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.player.play() }
         }
     }
 
@@ -79,21 +71,35 @@ final class PlayerViewModel: NSObject, ObservableObject {
         applyAudioSelection()
     }
 
-    private func applyAudioSelection() {
-        let target = (activeChannel == .a) ? setup.audioTrackAIndex : setup.audioTrackBIndex
-        let tracks = player.audioTracks
-        print("[PlayerViewModel] applyAudioSelection channel=\(activeChannel.label) target=\(target) tracks=\(tracks.count)")
-        for (i, track) in tracks.enumerated() {
-            print("  [\(i)] id=\(track.trackId) name=\(track.trackName) lang=\(track.language ?? "?") selected=\(track.isSelected)")
+    private func loadAudioOptions(for item: AVPlayerItem) async {
+        do {
+            let asset = item.asset
+            guard let group = try await asset.loadMediaSelectionGroup(for: .audible) else {
+                print("[PlayerViewModel] no audible media selection group on asset")
+                return
+            }
+            let options = group.options
+            print("[PlayerViewModel] audio options: \(options.count)")
+            for (i, opt) in options.enumerated() {
+                print("  [\(i)] \(opt.displayName) lang=\(opt.extendedLanguageTag ?? "?")")
+            }
+            audioSelectionGroup = group
+            audioOptions = options
+            applyAudioSelection()
+        } catch {
+            print("[PlayerViewModel] loadAudioOptions error: \(error.localizedDescription)")
         }
-        guard target >= 0, target < tracks.count else { return }
-        // Exclusive selection: setting this to true unselects every other audio
-        // track automatically — flipping per-track isSelected is unreliable.
-        tracks[target].isSelectedExclusively = true
     }
 
-    private func disableVLCSubtitleOverlay() {
-        player.deselectAllTextTracks()
+    // The remuxed file always has Channel A's source as audio[0] and Channel
+    // B's source as audio[1] — that ordering was fixed by MediaPreparer's
+    // `-map 0:a:A -map 0:a:B` argument order.
+    private func applyAudioSelection() {
+        let target = (activeChannel == .a) ? 0 : 1
+        guard let group = audioSelectionGroup,
+              audioOptions.indices.contains(target) else { return }
+        player.currentItem?.select(audioOptions[target], in: group)
+        print("[PlayerViewModel] selected audio [\(target)] = \(audioOptions[target].displayName)")
     }
 
     // MARK: Phrase navigation
@@ -130,68 +136,30 @@ final class PlayerViewModel: NSObject, ObservableObject {
         cues.first(where: { $0.startTime <= time && time <= $0.endTime })
     }
 
-    // MARK: Subtitle loading
+    // MARK: Observers
 
-    private func loadSubtitles() async {
-        subtitleStatus = "Extracting subtitles via ffmpeg…"
-        let url = setup.fileURL
-        let streamIndex = setup.subtitleTrackIndex
-        do {
-            let parsed = try await SubtitleParser.extractCues(
-                fileURL: url,
-                subtitleStreamIndex: streamIndex
-            )
-            cues = parsed
-            subtitleStatus = parsed.isEmpty ? "No subtitle cues found." : nil
-        } catch {
-            subtitleStatus = error.localizedDescription
+    private func startTimeObserver() {
+        let interval = CMTime(seconds: 0.1, preferredTimescale: 600)
+        timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
+            Task { @MainActor [weak self] in self?.tick(time: time) }
         }
     }
 
-    // MARK: Polling
-
-    private func startTimer() {
-        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+    private func observeRate() {
+        rateObservation = player.observe(\.rate, options: [.new]) { [weak self] player, _ in
+            let playing = player.rate > 0
             Task { @MainActor [weak self] in
-                self?.tick()
+                self?.isPlaying = playing
             }
         }
     }
 
-    private func tick() {
-        currentTime = TimeInterval(player.time.intValue) / 1000.0
-        if duration == 0, let length = player.media?.length.intValue, length > 0 {
-            duration = TimeInterval(length) / 1000.0
+    private func tick(time: CMTime) {
+        currentTime = CMTimeGetSeconds(time)
+        if duration == 0, let item = player.currentItem {
+            let dur = CMTimeGetSeconds(item.duration)
+            if dur.isFinite, dur > 0 { duration = dur }
         }
-        isPlaying = player.isPlaying
         currentCueIndex = cues.firstIndex { $0.startTime <= currentTime && currentTime <= $0.endTime }
-    }
-}
-
-extension PlayerViewModel: VLCMediaPlayerDelegate {
-    nonisolated func mediaPlayerStateChanged(_ newState: VLCMediaPlayerState) {
-        Task { @MainActor in
-            self.handleStateChange()
-        }
-    }
-
-    // Audio tracks aren't enumerated by libvlc until shortly after playback
-    // starts. This callback is the reliable signal that they're now selectable.
-    nonisolated func mediaPlayerTrackAdded(_ trackId: String, with trackType: VLCMedia.TrackType) {
-        guard trackType == .audio else { return }
-        Task { @MainActor in
-            self.applyAudioSelection()
-        }
-    }
-
-    private func handleStateChange() {
-        if player.state == .playing && !didApplyInitialSelection {
-            didApplyInitialSelection = true
-            applyAudioSelection()
-            disableVLCSubtitleOverlay()
-            if let length = player.media?.length.intValue, length > 0 {
-                duration = TimeInterval(length) / 1000.0
-            }
-        }
     }
 }

@@ -1,4 +1,6 @@
 import SwiftUI
+import AppKit
+import AVFoundation
 
 struct MainPlayerView: View {
     @StateObject private var viewModel: PlayerViewModel
@@ -22,11 +24,10 @@ struct MainPlayerView: View {
 
     private var videoArea: some View {
         ZStack(alignment: .topTrailing) {
-            VLCVideoRepresentable(drawable: viewModel.drawableView)
+            AVPlayerRepresentable(player: viewModel.player)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             channelIndicator
                 .padding(16)
-            subtitleStatusBadge
         }
         .background(Color.black)
     }
@@ -47,22 +48,6 @@ struct MainPlayerView: View {
         }
     }
 
-    @ViewBuilder
-    private var subtitleStatusBadge: some View {
-        if let status = viewModel.subtitleStatus {
-            VStack {
-                Spacer()
-                Label(status, systemImage: "captions.bubble")
-                    .font(.caption)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(Color.black.opacity(0.6), in: Capsule())
-                    .padding(.bottom, 16)
-            }
-        }
-    }
-
     private var keyboardLayer: some View {
         Group {
             Button("") { viewModel.previousPhrase() }
@@ -77,9 +62,34 @@ struct MainPlayerView: View {
     }
 }
 
-private struct VLCVideoRepresentable: NSViewRepresentable {
-    let drawable: NSView
+private struct AVPlayerRepresentable: NSViewRepresentable {
+    let player: AVPlayer
 
-    func makeNSView(context: Context) -> NSView { drawable }
-    func updateNSView(_ nsView: NSView, context: Context) {}
+    func makeNSView(context: Context) -> AVPlayerHostView {
+        let view = AVPlayerHostView()
+        view.playerLayer.player = player
+        return view
+    }
+
+    func updateNSView(_ nsView: AVPlayerHostView, context: Context) {
+        nsView.playerLayer.player = player
+    }
+}
+
+final class AVPlayerHostView: NSView {
+    let playerLayer = AVPlayerLayer()
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        // Order matters: assigning `layer` before turning on `wantsLayer`
+        // makes this a layer-hosting view, which is what AVPlayerLayer needs.
+        layer = playerLayer
+        wantsLayer = true
+        playerLayer.videoGravity = .resizeAspect
+        playerLayer.backgroundColor = NSColor.black.cgColor
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) not used")
+    }
 }

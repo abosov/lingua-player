@@ -20,6 +20,7 @@
 		DB00000000000000000000DB /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA00000000000000000000CA /* PlayerViewModel.swift */; };
 		DC00000000000000000000DC /* SubtitleOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB00000000000000000000CB /* SubtitleOverlayView.swift */; };
 		DD00000000000000000000DD /* ControlBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC00000000000000000000CC /* ControlBarView.swift */; };
+		DF00000000000000000000DF /* MediaPreparer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE00000000000000000000CE /* MediaPreparer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +38,7 @@
 		CA00000000000000000000CA /* PlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerViewModel.swift; sourceTree = "<group>"; };
 		CB00000000000000000000CB /* SubtitleOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleOverlayView.swift; sourceTree = "<group>"; };
 		CC00000000000000000000CC /* ControlBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlBarView.swift; sourceTree = "<group>"; };
+		CE00000000000000000000CE /* MediaPreparer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPreparer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,6 +105,7 @@
 			children = (
 				C300000000000000000000C3 /* VideoPlayerEngine.swift */,
 				C900000000000000000000C9 /* SubtitleParser.swift */,
+				CE00000000000000000000CE /* MediaPreparer.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -221,6 +224,7 @@
 				DB00000000000000000000DB /* PlayerViewModel.swift in Sources */,
 				DC00000000000000000000DC /* SubtitleOverlayView.swift in Sources */,
 				DD00000000000000000000DD /* ControlBarView.swift in Sources */,
+				DF00000000000000000000DF /* MediaPreparer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
