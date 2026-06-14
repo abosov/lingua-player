@@ -138,9 +138,17 @@ enum SubtitleParser {
             let text = lines[cursor...]
                 .joined(separator: "\n")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-            cues.append(SubtitleCue(id: index, startTime: start, endTime: end, text: text))
+            cues.append(SubtitleCue(id: index, startTime: start, endTime: end, text: stripTags(text)))
         }
         return cues
+    }
+
+    private static let tagRegex = try! NSRegularExpression(pattern: "<[^>]+>")
+
+    private static func stripTags(_ text: String) -> String {
+        let range = NSRange(text.startIndex..., in: text)
+        let stripped = tagRegex.stringByReplacingMatches(in: text, range: range, withTemplate: "")
+        return stripped.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private static func parseTimecodes(_ line: String) -> (TimeInterval, TimeInterval)? {
