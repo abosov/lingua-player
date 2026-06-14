@@ -94,7 +94,10 @@ final class StreamSetupViewModel: ObservableObject {
                 try await MediaPreparer.remux(
                     source: source,
                     audioTrackAIndex: audioA,
-                    audioTrackBIndex: audioB
+                    audioTrackBIndex: audioB,
+                    onReencodeStart: { @MainActor [weak self] in
+                        self?.preparingStatus = "Converting video…"
+                    }
                 )
             }
             let cuesTask = Task { () throws -> [SubtitleCue] in
