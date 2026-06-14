@@ -2,13 +2,16 @@ import Foundation
 
 enum SubtitleParseError: LocalizedError {
     case ffmpegNotFound
+    case launchFailed(String)
     case extractionFailed(Int32, String)
     case decodingFailed
 
     var errorDescription: String? {
         switch self {
         case .ffmpegNotFound:
-            return "ffmpeg not found. Install via Homebrew: brew install ffmpeg"
+            return "ffmpeg not found at /usr/local/bin/ffmpeg or /opt/homebrew/bin/ffmpeg. Install via Homebrew: brew install ffmpeg"
+        case .launchFailed(let msg):
+            return "Could not launch ffmpeg: \(msg)"
         case .extractionFailed(let code, let stderr):
             let snippet = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             return "ffmpeg failed (exit \(code))" + (snippet.isEmpty ? "" : ": \(snippet)")
@@ -21,14 +24,36 @@ enum SubtitleParseError: LocalizedError {
 /// Extracts a single embedded subtitle track from a media file by shelling
 /// out to ffmpeg ("-f srt pipe:1") and parsing the resulting SRT.
 ///
-/// Requires ffmpeg on the host (Homebrew or system). The app must run
-/// unsandboxed so Process can launch /opt/homebrew/bin/ffmpeg etc.
+/// The app must run unsandboxed so Process can launch /usr/local/bin/ffmpeg
+/// or /opt/homebrew/bin/ffmpeg. We use absolute paths because GUI apps
+/// launched from Xcode/Finder inherit a minimal PATH that does not include
+/// Homebrew locations.
 enum SubtitleParser {
-    static func extractCues(fileURL: URL, subtitleStreamIndex: Int) async throws -> [SubtitleCue] {
-        let ffmpeg = try findFFmpeg()
+    private static let ffmpegCandidates = [
+        "/usr/local/bin/ffmpeg",      // Intel Homebrew, MacPorts
+        "/opt/homebrew/bin/ffmpeg"    // Apple Silicon Homebrew
+    ]
 
+    static func extractCues(fileURL: URL, subtitleStreamIndex: Int) async throws -> [SubtitleCue] {
+        let ffmpeg = try locateFFmpeg()
+        let srt = try await runFFmpeg(executable: ffmpeg, fileURL: fileURL, subtitleStreamIndex: subtitleStreamIndex)
+        return parseSRT(srt)
+    }
+
+    private static func locateFFmpeg() throws -> String {
+        for path in ffmpegCandidates where FileManager.default.isExecutableFile(atPath: path) {
+            return path
+        }
+        throw SubtitleParseError.ffmpegNotFound
+    }
+
+    private static func runFFmpeg(
+        executable: String,
+        fileURL: URL,
+        subtitleStreamIndex: Int
+    ) async throws -> String {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: ffmpeg)
+        process.executableURL = URL(fileURLWithPath: executable)
         process.arguments = [
             "-nostdin",
             "-loglevel", "error",
@@ -42,41 +67,46 @@ enum SubtitleParser {
         process.standardOutput = stdout
         process.standardError = stderr
 
-        let srt: String = try await withCheckedThrowingContinuation { continuation in
-            process.terminationHandler = { proc in
-                let outData = stdout.fileHandleForReading.readDataToEndOfFile()
-                let errData = stderr.fileHandleForReading.readDataToEndOfFile()
-                guard proc.terminationStatus == 0 else {
-                    let msg = String(data: errData, encoding: .utf8) ?? ""
-                    continuation.resume(throwing: SubtitleParseError.extractionFailed(proc.terminationStatus, msg))
+        return try await withCheckedThrowingContinuation { continuation in
+            // Drain stdout + stderr concurrently in background threads. If we
+            // only read after termination, ffmpeg blocks once the kernel pipe
+            // buffer (~64 KB) fills — which it will for any non-trivial SRT.
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    try process.run()
+                } catch {
+                    continuation.resume(throwing: SubtitleParseError.launchFailed(error.localizedDescription))
                     return
                 }
-                guard let text = String(data: outData, encoding: .utf8) else {
+
+                let buffers = IOBuffers()
+                let group = DispatchGroup()
+
+                group.enter()
+                DispatchQueue.global(qos: .userInitiated).async {
+                    buffers.out = stdout.fileHandleForReading.readDataToEndOfFile()
+                    group.leave()
+                }
+                group.enter()
+                DispatchQueue.global(qos: .userInitiated).async {
+                    buffers.err = stderr.fileHandleForReading.readDataToEndOfFile()
+                    group.leave()
+                }
+                group.wait()
+                process.waitUntilExit()
+
+                guard process.terminationStatus == 0 else {
+                    let msg = String(data: buffers.err, encoding: .utf8) ?? ""
+                    continuation.resume(throwing: SubtitleParseError.extractionFailed(process.terminationStatus, msg))
+                    return
+                }
+                guard let text = String(data: buffers.out, encoding: .utf8) else {
                     continuation.resume(throwing: SubtitleParseError.decodingFailed)
                     return
                 }
                 continuation.resume(returning: text)
             }
-            do {
-                try process.run()
-            } catch {
-                continuation.resume(throwing: error)
-            }
         }
-
-        return parseSRT(srt)
-    }
-
-    private static func findFFmpeg() throws -> String {
-        let candidates = [
-            "/opt/homebrew/bin/ffmpeg",
-            "/usr/local/bin/ffmpeg",
-            "/usr/bin/ffmpeg"
-        ]
-        for path in candidates where FileManager.default.isExecutableFile(atPath: path) {
-            return path
-        }
-        throw SubtitleParseError.ffmpegNotFound
     }
 
     private static func parseSRT(_ raw: String) -> [SubtitleCue] {
@@ -132,4 +162,11 @@ enum SubtitleParser {
               let s = Double(parts[2]) else { return nil }
         return h * 3600 + m * 60 + s
     }
+}
+
+/// Two-field box for the concurrent pipe readers. Writes to distinct fields
+/// happen on separate queues; DispatchGroup gives the happens-before barrier.
+private final class IOBuffers: @unchecked Sendable {
+    var out = Data()
+    var err = Data()
 }
