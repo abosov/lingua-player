@@ -6,102 +6,107 @@ import MobileVLCKit
 #endif
 
 enum VideoProbeError: LocalizedError {
-    case parseFailed
+    case mediaCreationFailed
+    case probeFailed
     case noTracksFound
 
     var errorDescription: String? {
         switch self {
-        case .parseFailed: return "VLCKit failed to parse the file."
+        case .mediaCreationFailed: return "Could not open the file with VLCKit."
+        case .probeFailed: return "VLCKit failed to read tracks from the file."
         case .noTracksFound: return "No audio or subtitle tracks were found."
         }
     }
 }
 
 /// Wraps VLCKit. For Step 1 only exposes track probing; playback comes later.
+///
+/// VLCKit 4.x dropped the `tracksInformation` dictionary API. Tracks are now
+/// exposed on `VLCMediaPlayer` once playback opens, so we briefly play the
+/// file (muted, no drawable) and read `audioTracks` + `textTracks`.
 final class VideoPlayerEngine: NSObject {
     private let lock = NSLock()
     private var pending: CheckedContinuation<[MediaTrack], Error>?
-    private var currentMedia: VLCMedia?
+    private var probePlayer: VLCMediaPlayer?
 
-    /// Parses the file and returns its audio + subtitle tracks.
     func probeTracks(at url: URL) async throws -> [MediaTrack] {
         try await withCheckedThrowingContinuation { continuation in
-            let media = VLCMedia(url: url)
-            media.delegate = self
+            guard let media = VLCMedia(url: url) else {
+                continuation.resume(throwing: VideoProbeError.mediaCreationFailed)
+                return
+            }
+            let player = VLCMediaPlayer()
+            player.media = media
+            player.delegate = self
+            player.audio?.volume = 0
 
             lock.lock()
             self.pending = continuation
-            self.currentMedia = media
+            self.probePlayer = player
             lock.unlock()
 
-            // Local parse, no network. Result delivered to mediaDidFinishParsing(_:).
-            media.parse(options: [.parseLocal])
+            player.play()
         }
     }
 
-    private func extractTracks(from media: VLCMedia) -> [MediaTrack] {
-        guard let raw = media.tracksInformation as? [[String: Any]] else {
-            return []
+    private func collectTracks(from player: VLCMediaPlayer) -> [MediaTrack] {
+        var result: [MediaTrack] = []
+        for (offset, track) in player.audioTracks.enumerated() {
+            result.append(MediaTrack(
+                id: offset,
+                kind: .audio,
+                language: nil,
+                codec: nil,
+                description: track.trackName
+            ))
         }
-        return raw.compactMap(Self.makeTrack(from:))
+        for (offset, track) in player.textTracks.enumerated() {
+            result.append(MediaTrack(
+                id: offset,
+                kind: .subtitle,
+                language: nil,
+                codec: nil,
+                description: track.trackName
+            ))
+        }
+        return result
     }
 
-    private static func makeTrack(from dict: [String: Any]) -> MediaTrack? {
-        guard let type = dict[VLCMediaTracksInformationType] as? String else {
-            return nil
-        }
-        let kind: MediaTrack.Kind
-        switch type {
-        case VLCMediaTracksInformationTypeAudio:
-            kind = .audio
-        case VLCMediaTracksInformationTypeText:
-            kind = .subtitle
-        default:
-            return nil
-        }
-        let id = (dict[VLCMediaTracksInformationId] as? NSNumber)?.intValue ?? -1
-        let language = (dict[VLCMediaTracksInformationLanguage] as? String)
-            .flatMap { $0.isEmpty ? nil : $0 }
-        let description = (dict[VLCMediaTracksInformationDescription] as? String)
-            .flatMap { $0.isEmpty ? nil : $0 }
-        let codec = (dict[VLCMediaTracksInformationCodec] as? NSNumber)
-            .map { fourCCString($0.uint32Value) }
-            .flatMap { $0.isEmpty ? nil : $0 }
-        return MediaTrack(
-            id: id,
-            kind: kind,
-            language: language,
-            codec: codec,
-            description: description
-        )
+    private func finish(tracks: [MediaTrack]) {
+        lock.lock()
+        let continuation = pending
+        let player = probePlayer
+        pending = nil
+        probePlayer = nil
+        lock.unlock()
+
+        player?.stop()
+        continuation?.resume(returning: tracks)
     }
 
-    private static func fourCCString(_ value: UInt32) -> String {
-        let bytes: [UInt8] = [
-            UInt8((value >> 24) & 0xFF),
-            UInt8((value >> 16) & 0xFF),
-            UInt8((value >> 8) & 0xFF),
-            UInt8(value & 0xFF)
-        ]
-        let scalars = bytes.compactMap { byte -> UnicodeScalar? in
-            guard byte >= 0x20, byte < 0x7F else { return nil }
-            return UnicodeScalar(byte)
-        }
-        return String(String.UnicodeScalarView(scalars))
-            .trimmingCharacters(in: .whitespaces)
+    private func fail(_ error: Error) {
+        lock.lock()
+        let continuation = pending
+        let player = probePlayer
+        pending = nil
+        probePlayer = nil
+        lock.unlock()
+
+        player?.stop()
+        continuation?.resume(throwing: error)
     }
 }
 
-extension VideoPlayerEngine: VLCMediaDelegate {
-    func mediaDidFinishParsing(_ aMedia: VLCMedia) {
-        lock.lock()
-        let continuation = pending
-        pending = nil
-        currentMedia = nil
-        lock.unlock()
-
-        guard let continuation else { return }
-        let tracks = extractTracks(from: aMedia)
-        continuation.resume(returning: tracks)
+extension VideoPlayerEngine: VLCMediaPlayerDelegate {
+    func mediaPlayerStateChanged(_ aNotification: Notification) {
+        guard let player = aNotification.object as? VLCMediaPlayer else { return }
+        switch player.state {
+        case .playing:
+            finish(tracks: collectTracks(from: player))
+        case .error:
+            fail(VideoProbeError.probeFailed)
+        default:
+            break
+        }
     }
 }
