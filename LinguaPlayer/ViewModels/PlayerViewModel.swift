@@ -9,6 +9,7 @@ final class PlayerViewModel: NSObject, ObservableObject {
     @Published private(set) var activeChannel: Channel = .a
     @Published private(set) var cues: [SubtitleCue] = []
     @Published private(set) var currentCueIndex: Int? = nil
+    @Published private(set) var subtitlesVisible: Bool = true
 
     let player: AVPlayer
     private let remuxedURL: URL
@@ -86,6 +87,12 @@ final class PlayerViewModel: NSObject, ObservableObject {
     func toggleChannel() {
         activeChannel = (activeChannel == .a) ? .b : .a
         applyAudioSelection()
+    }
+
+    // Cue tracking (currentCueIndex / currentCueText) keeps running while
+    // hidden so future features — translation, jump-by-phrase — still work.
+    func toggleSubtitleVisibility() {
+        subtitlesVisible.toggle()
     }
 
     private func loadAudioOptions(for item: AVPlayerItem) async {

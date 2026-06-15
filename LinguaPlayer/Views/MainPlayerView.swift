@@ -4,7 +4,7 @@ import AVFoundation
 
 struct MainPlayerView: View {
     @StateObject private var viewModel: PlayerViewModel
-    @State private var audioToggleMonitor: Any?
+    @State private var keyMonitor: Any?
 
     init(setup: PlaybackSetup) {
         _viewModel = StateObject(wrappedValue: PlayerViewModel(setup: setup))
@@ -13,7 +13,10 @@ struct MainPlayerView: View {
     var body: some View {
         VStack(spacing: 0) {
             videoArea
-            SubtitleOverlayView(text: viewModel.currentCueText ?? "")
+            SubtitleOverlayView(
+                text: viewModel.currentCueText ?? "",
+                isVisible: viewModel.subtitlesVisible
+            )
             ControlBarView(viewModel: viewModel)
         }
         .frame(minWidth: 800, minHeight: 600)
@@ -21,11 +24,11 @@ struct MainPlayerView: View {
         .background(keyboardLayer)
         .onAppear {
             viewModel.start()
-            installAudioToggleMonitor()
+            installKeyMonitor()
         }
         .onDisappear {
             viewModel.stop()
-            removeAudioToggleMonitor()
+            removeKeyMonitor()
         }
     }
 
@@ -71,26 +74,33 @@ struct MainPlayerView: View {
     // which would never match shortcut("a"). An NSEvent monitor lets us
     // match characters directly across layouts.
     private static let audioToggleCharacters: Set<String> = ["a", "A", "ф", "Ф"]
+    private static let subtitleToggleCharacters: Set<String> = ["s", "S", "ы", "Ы"]
 
-    private func installAudioToggleMonitor() {
-        guard audioToggleMonitor == nil else { return }
-        audioToggleMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+    private func installKeyMonitor() {
+        guard keyMonitor == nil else { return }
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             let mods = event.modifierFlags
                 .intersection(.deviceIndependentFlagsMask)
                 .subtracting(.shift)
             guard mods.isEmpty,
-                  let chars = event.charactersIgnoringModifiers,
-                  Self.audioToggleCharacters.contains(chars)
+                  let chars = event.charactersIgnoringModifiers
             else { return event }
-            viewModel.toggleChannel()
-            return nil
+            if Self.audioToggleCharacters.contains(chars) {
+                viewModel.toggleChannel()
+                return nil
+            }
+            if Self.subtitleToggleCharacters.contains(chars) {
+                viewModel.toggleSubtitleVisibility()
+                return nil
+            }
+            return event
         }
     }
 
-    private func removeAudioToggleMonitor() {
-        if let monitor = audioToggleMonitor {
+    private func removeKeyMonitor() {
+        if let monitor = keyMonitor {
             NSEvent.removeMonitor(monitor)
-            audioToggleMonitor = nil
+            keyMonitor = nil
         }
     }
 }
