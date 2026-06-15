@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import AVFoundation
 
 @MainActor
@@ -13,6 +14,11 @@ final class PlayerViewModel: NSObject, ObservableObject {
 
     let player: AVPlayer
     private let remuxedURL: URL
+    private let startPosition: TimeInterval
+    private let recentFiles: RecentFilesStore
+    private var recent: RecentFile
+    private var lastPersistedPosition: TimeInterval = -1
+    private static let positionSaveInterval: TimeInterval = 30
     private var timeObserver: Any?
     private var rateObservation: NSKeyValueObservation?
     private var itemStatusObservation: NSKeyValueObservation?
@@ -20,12 +26,16 @@ final class PlayerViewModel: NSObject, ObservableObject {
     private var timeControlObservation: NSKeyValueObservation?
     private var stalledObserver: NSObjectProtocol?
     private var failedToPlayObserver: NSObjectProtocol?
+    private var terminationObserver: NSObjectProtocol?
     private var audioSelectionGroup: AVMediaSelectionGroup?
     private var audioOptions: [AVMediaSelectionOption] = []
 
-    init(setup: PlaybackSetup) {
+    init(setup: PlaybackSetup, recentFiles: RecentFilesStore = .shared) {
         self.remuxedURL = setup.remuxedURL
         self.cues = setup.cues
+        self.startPosition = setup.startPosition
+        self.recentFiles = recentFiles
+        self.recent = setup.recent
         Self.reportInputFile(at: setup.remuxedURL)
         let item = AVPlayerItem(url: setup.remuxedURL)
         self.player = AVPlayer(playerItem: item)
@@ -36,8 +46,12 @@ final class PlayerViewModel: NSObject, ObservableObject {
         observePlayerStatus()
         observeTimeControl()
         observeFailureNotifications(for: item)
+        observeAppTermination()
         Task { await loadAudioOptions(for: item) }
         Task { await dumpAssetTrackInfo(item) }
+        // Bring the entry to the top of the recents list immediately, even
+        // before any playback progress.
+        recentFiles.upsert(recent)
     }
 
     deinit {
@@ -50,12 +64,24 @@ final class PlayerViewModel: NSObject, ObservableObject {
         if let failedToPlayObserver {
             NotificationCenter.default.removeObserver(failedToPlayObserver)
         }
+        if let terminationObserver {
+            NotificationCenter.default.removeObserver(terminationObserver)
+        }
         // Clean up the temp remuxed MP4 so we don't leak it between sessions.
         try? FileManager.default.removeItem(at: remuxedURL)
     }
 
     func start() {
-        player.play()
+        if startPosition > 0 {
+            let target = CMTime(seconds: startPosition, preferredTimescale: 600)
+            // Seek before play so the user lands where they left off rather
+            // than seeing a flash of the file's opening frame.
+            player.seek(to: target, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
+                Task { @MainActor [weak self] in self?.player.play() }
+            }
+        } else {
+            player.play()
+        }
     }
 
     func stop() {
@@ -315,5 +341,36 @@ final class PlayerViewModel: NSObject, ObservableObject {
             if dur.isFinite, dur > 0 { duration = dur }
         }
         currentCueIndex = cues.firstIndex { $0.startTime <= currentTime && currentTime <= $0.endTime }
+        maybePersistPosition()
+    }
+
+    private func maybePersistPosition() {
+        guard currentTime > 0 else { return }
+        if lastPersistedPosition < 0 || abs(currentTime - lastPersistedPosition) >= Self.positionSaveInterval {
+            persistPosition()
+        }
+    }
+
+    private func persistPosition() {
+        recent.lastPositionSeconds = currentTime
+        if duration > 0 { recent.totalDurationSeconds = duration }
+        recent.lastOpened = Date()
+        recentFiles.upsert(recent)
+        lastPersistedPosition = currentTime
+    }
+
+    private func observeAppTermination() {
+        // NSApplication.willTerminate is posted synchronously on the main
+        // thread, so the .main queue runs the block on a MainActor-isolated
+        // executor — assumeIsolated lets us touch our state safely.
+        terminationObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.persistPosition()
+            }
+        }
     }
 }

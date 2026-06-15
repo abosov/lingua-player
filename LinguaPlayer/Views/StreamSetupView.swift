@@ -2,6 +2,7 @@ import SwiftUI
 
 struct StreamSetupView: View {
     @ObservedObject var viewModel: StreamSetupViewModel
+    @ObservedObject private var recents = RecentFilesStore.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -21,6 +22,10 @@ struct StreamSetupView: View {
                     Text("Probing tracks…")
                         .foregroundStyle(.secondary)
                 }
+            }
+
+            if !recents.entries.isEmpty {
+                recentsSection
             }
 
             if let url = viewModel.fileURL {
@@ -48,6 +53,18 @@ struct StreamSetupView: View {
         .padding(24)
         .frame(minWidth: 640, minHeight: 480)
         .overlay { preparingOverlay }
+    }
+
+    private var recentsSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Recent")
+                .font(.headline)
+            ForEach(recents.entries) { entry in
+                RecentFileRow(entry: entry) {
+                    viewModel.openRecent(entry)
+                }
+            }
+        }
     }
 
     @ViewBuilder
@@ -256,5 +273,66 @@ private struct BadgeView: View {
             .foregroundStyle(.white)
             .frame(width: 22, height: 22)
             .background(badge.color, in: Circle())
+    }
+}
+
+private struct RecentFileRow: View {
+    let entry: RecentFile
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                Image(systemName: entry.fileExists ? "play.circle.fill" : "questionmark.circle")
+                    .font(.title2)
+                    .foregroundStyle(entry.fileExists ? Color.accentColor : .secondary)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(entry.fileName)
+                        .font(.body)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    HStack(spacing: 12) {
+                        Text(formatProgress(entry))
+                            .monospaced()
+                        Text(formatLabels(entry))
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    if !entry.fileExists {
+                        Text("File not found")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+                }
+                Spacer()
+            }
+            .padding(.vertical, 6)
+            .padding(.horizontal, 10)
+            .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 6))
+            .opacity(entry.fileExists ? 1.0 : 0.55)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func formatProgress(_ entry: RecentFile) -> String {
+        let pos = Self.formatTime(entry.lastPositionSeconds)
+        let total = Self.formatTime(entry.totalDurationSeconds)
+        return "\(pos) / \(total)"
+    }
+
+    private func formatLabels(_ entry: RecentFile) -> String {
+        "A: \(entry.audioALabel), B: \(entry.audioBLabel), S: \(entry.subtitleLabel)"
+    }
+
+    private static func formatTime(_ t: TimeInterval) -> String {
+        guard t.isFinite, t > 0 else { return "—" }
+        let total = Int(t)
+        let h = total / 3600
+        let m = (total % 3600) / 60
+        let s = total % 60
+        return h > 0
+            ? String(format: "%d:%02d:%02d", h, m, s)
+            : String(format: "%d:%02d", m, s)
     }
 }

@@ -18,4 +18,10 @@ struct PlaybackSetup: Equatable {
     /// index 1 is Channel B's source. AVPlayer reads this file directly.
     let remuxedURL: URL
     let cues: [SubtitleCue]
+    /// The persisted recents entry for this session. PlayerViewModel
+    /// upserts it on init and periodically updates lastPositionSeconds.
+    let recent: RecentFile
+    /// Seconds to seek to before first play — non-zero only when launching
+    /// from the recents list.
+    let startPosition: TimeInterval
 }

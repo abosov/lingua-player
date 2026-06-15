@@ -19,9 +19,14 @@ final class StreamSetupViewModel: ObservableObject {
     @Published private(set) var preparingStatus: String?
 
     private let engine: VideoPlayerEngine
+    private let recentFiles: RecentFilesStore
 
-    init(engine: VideoPlayerEngine = VideoPlayerEngine()) {
+    init(
+        engine: VideoPlayerEngine = VideoPlayerEngine(),
+        recentFiles: RecentFilesStore = .shared
+    ) {
         self.engine = engine
+        self.recentFiles = recentFiles
     }
 
     var canContinue: Bool {
@@ -66,11 +71,53 @@ final class StreamSetupViewModel: ObservableObject {
               let bIndex = audioTracks.firstIndex(where: { $0.id == b }),
               let subtitleTrack = subtitleTracks.first(where: { $0.id == s })
         else { return }
-        print("[StreamSetupViewModel] continue — audio A:#\(aIndex), audio B:#\(bIndex), subtitle:\(subtitleTrack.isExternal ? "external" : "embedded") \(subtitleTrack.description ?? "")")
-        Task { await prepare(source: url, audioA: aIndex, audioB: bIndex, subtitle: subtitleTrack) }
+
+        let subtitleSource: SubtitleSource
+        if let externalURL = subtitleTrack.externalURL {
+            subtitleSource = .external(path: externalURL.path)
+        } else {
+            // ffmpeg's `0:s:N` selector counts subtitle streams in their file
+            // order — match that by filtering out external tracks.
+            let embedded = subtitleTracks.filter { !$0.isExternal }
+            let embeddedIndex = embedded.firstIndex(where: { $0.id == subtitleTrack.id }) ?? 0
+            subtitleSource = .embedded(index: embeddedIndex)
+        }
+
+        let recent = RecentFile(
+            fileURL: url,
+            audioTrackAIndex: aIndex,
+            audioTrackBIndex: bIndex,
+            subtitleSource: subtitleSource,
+            audioALabel: audioTracks[aIndex].language ?? "?",
+            audioBLabel: audioTracks[bIndex].language ?? "?",
+            subtitleLabel: subtitleTrack.language ?? "?",
+            lastPositionSeconds: 0,
+            totalDurationSeconds: 0,
+            lastOpened: Date()
+        )
+
+        print("[StreamSetupViewModel] continue — audio A:#\(aIndex) (\(recent.audioALabel)), audio B:#\(bIndex) (\(recent.audioBLabel)), subtitle:\(subtitleTrack.isExternal ? "external" : "embedded") \(recent.subtitleLabel)")
+        Task { await prepare(recent: recent, startPosition: 0) }
     }
 
-    private func prepare(source: URL, audioA: Int, audioB: Int, subtitle: MediaTrack) async {
+    /// Skip the setup screen entirely: re-use the saved track assignments
+    /// and resume from the last position. If the file is missing we evict
+    /// the entry and surface a message.
+    func openRecent(_ entry: RecentFile) {
+        guard !isPreparing else { return }
+        guard entry.fileExists else {
+            recentFiles.remove(fileURL: entry.fileURL)
+            errorMessage = "File not found: \(entry.fileName)"
+            return
+        }
+        fileURL = entry.fileURL
+        errorMessage = nil
+        var refreshed = entry
+        refreshed.lastOpened = Date()
+        Task { await prepare(recent: refreshed, startPosition: entry.lastPositionSeconds) }
+    }
+
+    private func prepare(recent: RecentFile, startPosition: TimeInterval) async {
         isPreparing = true
         preparingStatus = "Preparing video…"
         errorMessage = nil
@@ -79,22 +126,24 @@ final class StreamSetupViewModel: ObservableObject {
             preparingStatus = nil
         }
 
-        // Snapshot what the cue task needs up front — once the Task starts it
-        // runs off the main actor and can't touch @MainActor state.
-        let externalURL = subtitle.externalURL
-        // ffmpeg's `0:s:N` selector counts subtitle streams in their file
-        // order — match that by filtering out the external tracks we
-        // appended ourselves.
-        let embeddedIndex: Int? = subtitleTracks
-            .filter { !$0.isExternal }
-            .firstIndex(where: { $0.id == subtitle.id })
+        let source = recent.fileURL
+        let externalURL: URL? = {
+            if case .external(let path) = recent.subtitleSource {
+                return URL(fileURLWithPath: path)
+            }
+            return nil
+        }()
+        let embeddedIndex: Int? = {
+            if case .embedded(let i) = recent.subtitleSource { return i }
+            return nil
+        }()
 
         do {
             let remuxTask = Task {
                 try await MediaPreparer.remux(
                     source: source,
-                    audioTrackAIndex: audioA,
-                    audioTrackBIndex: audioB,
+                    audioTrackAIndex: recent.audioTrackAIndex,
+                    audioTrackBIndex: recent.audioTrackBIndex,
                     onReencodeStart: { @MainActor [weak self] in
                         self?.preparingStatus = "Converting video…"
                     }
@@ -112,7 +161,12 @@ final class StreamSetupViewModel: ObservableObject {
             }
             let remuxedURL = try await remuxTask.value
             let cues = try await cuesTask.value
-            playbackSetup = PlaybackSetup(remuxedURL: remuxedURL, cues: cues)
+            playbackSetup = PlaybackSetup(
+                remuxedURL: remuxedURL,
+                cues: cues,
+                recent: recent,
+                startPosition: startPosition
+            )
         } catch {
             errorMessage = error.localizedDescription
         }
